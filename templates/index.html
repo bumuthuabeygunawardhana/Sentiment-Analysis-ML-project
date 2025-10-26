@@ -1,49 +1,281 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <Link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}"></Link>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Sentiment Analysis - Product Reviews</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .split {
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+
+        .split.left {
+            left: 0;
+            width: 40%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .split.right {
+            right: 0;
+            width: 60%;
+            background: #f8f9fa;
+        }
+
+        .centered {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .centered img {
+            max-width: 120%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .centered img:hover {
+            transform: scale(1.12);
+        }
+
+        .sentiment-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .sentiment-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .sentiment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .sentiment-icon {
+            font-size: 2.5rem;
+            margin-right: 20px;
+        }
+
+        .positive-icon {
+            color: #28a745;
+        }
+
+        .negative-icon {
+            color: #dc3545;
+        }
+
+        .sentiment-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sentiment-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .review-form {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-form h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .review-form textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .review-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .reviews-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .reviews-section h3 {
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .review-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .review-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+
+        .review-text {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .split.left, .split.right {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            
+            .split.left {
+                min-height: 50vh;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <div class="split left">
         <div class="centered">
-            <img src="../static/products/Helmet.jpg" alt="">
+            <img src="../static/products/Helmet.jpg" alt="Product Image">
         </div>
     </div>
-
 
     <div class="split right">
         <div class="container mt-5 mb-5">
             <div class="d-flex justify-content-center row">
-                <div class="d-flex flex-column col-md-8">
-                    <div>
-                        <label for="">Positive Sentiments : {{ data.positive }}</label>
+                <div class="col-md-11 col-lg-10">
+                    
+                    <!-- Header -->
+                    <div class="sentiment-header text-center">
+                        <h1 class="mb-2"><i class="fas fa-chart-line"></i> Sentiment Analysis</h1>
+                        <p class="mb-0">Real-time product review analysis</p>
                     </div>
-                    <div>
-                        <label for="">Negative Sentiments : {{ data.negative }}</label>
+
+                    <!-- Sentiment Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="sentiment-card">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-smile sentiment-icon positive-icon"></i>
+                                    <span class="sentiment-label">Positive Sentiments</span>
+                                </div>
+                                <div class="sentiment-count">{{ data.positive }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="sentiment-card">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-frown sentiment-icon negative-icon"></i>
+                                    <span class="sentiment-label">Negative Sentiments</span>
+                                </div>
+                                <div class="sentiment-count">{{ data.negative }}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
+
+                    <!-- Review Form -->
+                    <div class="review-form">
+                        <h3><i class="fas fa-pen-to-square"></i> Share Your Review</h3>
                         <form method="post">
-                          <textarea name="text"></textarea>
-                          <input type="submit">
+                            <textarea name="text" placeholder="Write your product review here..." required></textarea>
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-paper-plane"></i> Submit Review
+                            </button>
                         </form>
                     </div>
 
-                    <div class="coment-bottom bg-white p-2 px-4">
+                    <!-- Reviews Section -->
+                    {% if data.reviews %}
+                    <div class="reviews-section">
+                        <h3><i class="fas fa-comments"></i> Customer Reviews</h3>
                         {% for review in data.reviews %}
-                        <hr/>
-                          <div
-                              class="commented-section mt-2">
-                              <div class="d-flex flex-row align-items-center commented-user">
-                                  </div>
-                                  <div class="text-nowrap bd-highlight"><span>{{ review }}</span></div>
-                                  <hr/>
+                        <div class="review-item">
+                            <div class="review-text">
+                                <i class="fas fa-quote-left" style="color: #667eea; margin-right: 8px;"></i>
+                                {{ review }}
+                                <i class="fas fa-quote-right" style="color: #667eea; margin-left: 8px;"></i>
+                            </div>
+                        </div>
                         {% endfor %}
-                      </div>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
         </div>
